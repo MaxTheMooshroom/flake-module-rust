@@ -30,6 +30,86 @@ let
       "default"
       "complete"
     ];
+
+  toolchain-file =
+    {
+      inherit _type;
+      type = types.nullOr types.pathInStore;
+      default = null;
+    };
+
+  channel =
+    {
+      inherit _type;
+      default = null;
+      type =
+        types.nullOr
+          (types.strMatching channel-pattern);
+    };
+
+  components =
+    {
+      inherit _type;
+      default = null;
+      type =
+        types.nullOr
+          (
+            types.listOf
+              (types.enum rust-components)
+          );
+
+      apply =
+        listMaybe:
+        if    isNull listMaybe
+        then  listMaybe
+        else  lib.uniqList { inputList = listMaybe; };
+    };
+
+  profile =
+    {
+      inherit _type;
+      default = null;
+      type =
+        types.nullOr (types.enum rust-profiles);
+    };
+
+  # NOTE: points to an existing install-path for the toolchain.
+  # Since this is creating the toolchain, and the rust-overlay
+  # rust-overlay probably already handles this, I'm going
+  # to assume that this isn't needed.
+  path =
+    {
+      inherit _type;
+      default = null;
+      type =
+        types.nullOr
+          (
+            types.pathWith
+              { inStore = true; absolute = true; }
+          );
+    };
+
+  # NOTE: handled through existing nixpkgs infra,
+  # so probably not needed?
+  targets =
+    {
+      inherit _type;
+      type = types.listOf (types.enum []);
+    };
+
+  toolchain-config =
+    {
+      inherit _type;
+
+      type =
+        types.submodule
+          {
+            options =
+              {
+                inherit channel components profile /* path targets */;
+              };
+          };
+    };
 in
 {
   imports =
@@ -45,86 +125,11 @@ in
                 type =
                   types.attrTag
                     {
-                      file =
-                        {
-                          inherit _type;
-                          type = types.nullOr types.pathInStore;
-                          default = null;
-                        };
-
-                      config =
-                        {
-                          inherit _type;
-                          type =
-                            types.submodule
-                              {
-                                options =
-                                  {
-                                    channel =
-                                      {
-                                        inherit _type;
-                                        default = null;
-                                        type =
-                                          types.nullOr
-                                            (types.strMatching channel-pattern);
-                                      };
-
-                                    components =
-                                      {
-                                        inherit _type;
-                                        default = null;
-                                        type =
-                                          types.nullOr
-                                            (types.listOf
-                                              (types.enum rust-components)
-                                            );
-                                        apply =
-                                          listMaybe:
-                                          if    isNull listMaybe
-                                          then  listMaybe
-                                          else
-                                            lib.uniqList { inputList = listMaybe; };
-                                      };
-
-                                    # NOTE: points to an existing install-path for the toolchain.
-                                    # Since this is creating the toolchain, and the rust-overlay
-                                    # rust-overlay probably already handles this, I'm going
-                                    # to assume that this isn't needed.
-                                    #
-                                    # path =
-                                    #   {
-                                    #     inherit _type;
-                                    #     default = null;
-                                    #     type =
-                                    #       types.nullOr
-                                    #         (
-                                    #           types.pathWith
-                                    #             { inStore = true; absolute = true; }
-                                    #         );
-                                    #   };
-
-                                    profile =
-                                      {
-                                        inherit _type;
-                                        default = null;
-                                        type =
-                                          types.nullOr (types.enum rust-profiles);
-                                      };
-
-                                    # NOTE: handled through existing nixpkgs infra,
-                                    # so probably not needed?
-                                    #
-                                    # targets =
-                                    #   {
-                                    #     inherit _type;
-                                    #     type = types.listOf (types.enum []);
-                                    #   };
-                                  };
-                              };
-                      };
-                  };
-            };
-        };
+                      file = toolchain-file;
+                      config = toolchain-config;
+                    };
+              };
+          };
       }
 
       (
