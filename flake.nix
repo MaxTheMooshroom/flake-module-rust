@@ -10,7 +10,7 @@
       # flake-test-config.inputs.flake-parts.follows = "flake-parts";
 
       flake-parts.url = "github:hercules-ci/flake-parts";
-      flake-parts.inputs.nixpkgs-lib.follows = "flake-test-file/nixpkgs";
+      # flake-parts.inputs.nixpkgs-lib.follows = "flake-test-file/nixpkgs";
 
       rust-overlay.url = "github:oxalica/rust-overlay";
     };
